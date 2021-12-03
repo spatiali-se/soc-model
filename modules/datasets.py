@@ -15,10 +15,8 @@ class SoilDataset(torch.utils.data.TensorDataset):
         self.targets = data[:, 0]
         self.features = data[:, 1:]
 
-        if features_transform is not None:
-            self.features_transform = features_transform
-        if target_transform is not None:
-            self.target_transform = target_transform
+        self.features_transform = features_transform
+        self.target_transform = target_transform
 
     def __len__(self):
         """Get length of dataset."""
@@ -31,9 +29,10 @@ class SoilDataset(torch.utils.data.TensorDataset):
         targ = self.targets[idx]
         feat = self.features[idx]
 
-        if self.features_transform is not None:
+        if self.features_transform:
             feat = self.features_transform(feat)
-        if self.target_transform is not None:
+        if self.target_transform:
             targ = self.target_transform(targ)
 
         return {"target": targ, "features": feat}
+
