@@ -3,18 +3,7 @@ import pdb
 import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
-import torch.optim as optim
 import torch
-import modules.datasets as dataset
-import modules.training_neural_networks as training
-import models.dense_neural_net as models
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import MinMaxScaler
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-import copy
 
 
 class TestModel:
@@ -41,7 +30,7 @@ class TestModel:
         self.MSELoss = nn.MSELoss()
         self.L1Loss = nn.L1Loss(reduce='mean')
 
-        self.compute_losses(model, test_loader)
+        self.compute_metrics(model, test_loader)
 
 
     def print_metric(self):
@@ -54,7 +43,8 @@ class TestModel:
             f'Average percentage ceovering = {self.average_percentage_covering:0.3f}')
 
 
-    def compute_losses(self, model, test_loader):
+    def compute_metrics(self, model, test_loader):
+        """Compute test metrics"""
 
         self.MSE = 0
         self.MAE = 0
