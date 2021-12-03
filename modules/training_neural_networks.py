@@ -92,7 +92,7 @@ class TrainModel(torch.nn.Module):
         return train_loss.detach().item()
 
     def validation_loss(self, val_loader):
-        "Compute validation metrics"
+        """Compute validation metrics"""
 
         self.model.eval()
         val_metrics_total = [0] * len(self.val_metrics)
@@ -112,7 +112,7 @@ class TrainModel(torch.nn.Module):
         return [(val_metric/len(val_loader)).item() for val_metric in val_metrics_total]
 
     def early_stopping(self, val_loss):
-        "Early stopping"
+        """Early stopping"""
 
         if val_loss < self.best_loss:
             self.best_model = copy.deepcopy(self.model.state_dict())
