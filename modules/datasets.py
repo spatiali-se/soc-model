@@ -1,6 +1,6 @@
 import torch
 from sklearn.model_selection import train_test_split
-
+import pdb
 
 class SoilDataset(torch.utils.data.TensorDataset):
     """Soil Features dataset."""
@@ -13,7 +13,7 @@ class SoilDataset(torch.utils.data.TensorDataset):
             feature_transform (callable, optional): Optional transform to be applied on a feature sample.
             target_transform (callable, optional): Optional transform to be applied on a target sample.
         """
-        self.targets = data[:, 0]
+        self.targets = data[:, 0:1]
         self.features = data[:, 1:]
 
         self.features_transform = features_transform

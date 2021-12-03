@@ -56,9 +56,9 @@ class TrainModel(torch.nn.Module):
         val_metrics = []
         progress_bar = tqdm(range(num_epochs))
         for epoch in progress_bar:
-            for i, (x_train, y_train) in enumerate(train_loader):
-                x_train = x_train.to(self.device)
-                y_train = y_train.to(self.device)
+            for i, train_data in enumerate(train_loader):
+                x_train = train_data['features'].to(self.device)
+                y_train = train_data['target'].to(self.device)
 
                 train_epoch_loss = self.train_batch(x_train, y_train)
 
@@ -99,8 +99,9 @@ class TrainModel(torch.nn.Module):
 
         # Test validation data
         with torch.no_grad():
-            for i, (x_val, y_val) in enumerate(val_loader):
-                x_val, y_val = x_val.to(self.device), y_val.to(self.device)
+            for i, val_data in enumerate(val_loader):
+                x_val = val_data['features'].to(self.device)
+                y_val = val_data['target'].to(self.device)
 
                 val_y_hat = self.model(x_val)
                 metrics = [val_metric(val_y_hat, y_val) for
