@@ -8,6 +8,7 @@ import torch
 import modules.datasets as dataset
 import modules.training_neural_networks as training
 import models.dense_neural_net as models
+import utils.test_routines as test_routines
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
@@ -31,7 +32,7 @@ if __name__ == "__main__":
     activation = nn.LeakyReLU()
     batch_size = 64
     dropout_rate = 0.20
-    num_epochs = 100
+    num_epochs = 10
     patience = 10
 
     # Load data
@@ -82,7 +83,17 @@ if __name__ == "__main__":
                                              early_stopping=True,
                                              patience=10)
 
+    plt.figure()
+    plt.semilogy(train_loss, linewidth=2., label='Train MSE loss')
+    plt.semilogy(val_metrics[:,0], linewidth=2., label='Val MSE loss')
+    plt.semilogy(val_metrics[:,1], linewidth=2., label='Val L1 loss')
+    plt.grid()
+    plt.legend()
+    plt.show()
 
+    print_metrics = True
+    test_model = test_routines.TestModel(model, test_dataloader)
+    test_model.print_metric()
 
 
 

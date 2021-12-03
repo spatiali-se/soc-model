@@ -2,6 +2,7 @@ import pdb
 import torch
 from tqdm import tqdm
 import copy
+import numpy as np
 
 
 class TrainModel(torch.nn.Module):
@@ -78,7 +79,7 @@ class TrainModel(torch.nn.Module):
                 break
 
         self.model.eval() # Model in eval mode
-        return train_loss, val_metrics
+        return np.asarray(train_loss), np.asarray(val_metrics)
 
     def train_batch(self, train_x, train_y):
         """Train model on one minibatch"""
