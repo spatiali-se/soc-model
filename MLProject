@@ -1,0 +1,11 @@
+name: mlflow-docker-test
+
+docker_env:
+  image: ml-docker
+
+entry_points:
+  main:
+    parameters:
+      param1: int
+      param2: { type: str, default: rofl }
+    command: "python train.py --param1 {param1} --param2 {param2}"
