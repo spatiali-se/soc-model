@@ -5,10 +5,9 @@ import copy
 import numpy as np
 
 
-class TrainModel(torch.nn.Module):
-
+class Trainer(torch.nn.Module):
     def __init__(self, model, optimizer, loss_function, device):
-        super(TrainModel, self).__init__()
+        super(Trainer, self).__init__()
         """
         Args:
             model (torch.nn.Module): Neural network model.
@@ -19,14 +18,21 @@ class TrainModel(torch.nn.Module):
         """
 
         self.model = model
-        self.model.train() # Model in training mode
+        self.model.train()  # Model in training mode
 
         self.optimizer = optimizer
         self.loss_function = loss_function
         self.device = device
 
-    def fit(self, train_loader, val_loader, num_epochs, val_metrics=None,
-            early_stopping=True, patience=10):
+    def fit(
+        self,
+        train_loader,
+        val_loader,
+        num_epochs,
+        val_metrics=None,
+        early_stopping=True,
+        patience=10,
+    ):
         """Fit model to training data
 
         Args:
@@ -57,17 +63,18 @@ class TrainModel(torch.nn.Module):
         val_metrics = []
         progress_bar = tqdm(range(num_epochs))
         for epoch in progress_bar:
-            for i, train_data in enumerate(train_loader):
-                x_train = train_data['features'].to(self.device)
-                y_train = train_data['target'].to(self.device)
+            for _, train_data in enumerate(train_loader):
+                x_train = train_data["features"].to(self.device)
+                y_train = train_data["target"].to(self.device)
 
                 train_epoch_loss = self.train_batch(x_train, y_train)
 
             val_epoch_metrics = self.validation_loss(val_loader)
             val_metrics.append(val_epoch_metrics)
 
-            progress_bar.set_postfix({'Train loss': train_epoch_loss,
-                                      'Val metrics': val_epoch_metrics})
+            progress_bar.set_postfix(
+                {"Train loss": train_epoch_loss, "Val metrics": val_epoch_metrics}
+            )
 
             train_loss.append(train_epoch_loss)
 
@@ -75,10 +82,10 @@ class TrainModel(torch.nn.Module):
 
             if early_stop:
                 self.model.load_state_dict(self.best_model)
-                print('Early Stopping!')
+                print("Early Stopping!")
                 break
 
-        self.model.eval() # Model in eval mode
+        self.model.eval()  # Model in eval mode
         return np.asarray(train_loss), np.asarray(val_metrics)
 
     def train_batch(self, train_x, train_y):
@@ -101,17 +108,22 @@ class TrainModel(torch.nn.Module):
         # Test validation data
         with torch.no_grad():
             for i, val_data in enumerate(val_loader):
-                x_val = val_data['features'].to(self.device)
-                y_val = val_data['target'].to(self.device)
+                x_val = val_data["features"].to(self.device)
+                y_val = val_data["target"].to(self.device)
 
                 val_y_hat = self.model(x_val)
-                metrics = [val_metric(val_y_hat, y_val) for
-                           val_metric in self.val_metrics]
-                val_metrics_total = [value+metric for (value, metric)
-                                     in zip(val_metrics_total, metrics)]
+                metrics = [
+                    val_metric(val_y_hat, y_val) for val_metric in self.val_metrics
+                ]
+                val_metrics_total = [
+                    value + metric
+                    for (value, metric) in zip(val_metrics_total, metrics)
+                ]
 
         self.model.train()
-        return [(val_metric/len(val_loader)).item() for val_metric in val_metrics_total]
+        return [
+            (val_metric / len(val_loader)).item() for val_metric in val_metrics_total
+        ]
 
     def early_stopping(self, val_loss):
         """Early stopping"""
