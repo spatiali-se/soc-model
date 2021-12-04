@@ -11,8 +11,8 @@ class SoilDataset(torch.utils.data.TensorDataset):
         """
         Args:
             data (pandas DataFrame): The pandas DataFrame containing the targets and features.
-            feature_transform (callable, optional): Optional transform to be applied on a feature sample.
-            target_transform (callable, optional): Optional transform to be applied on a target sample.
+            feature_transform (callable, optional): Transform to be applied on a feature sample.
+            target_transform (callable, optional): Transform to be applied on a target sample.
         """
         self.targets = data[:, 0:1]
         self.features = data[:, 1:]
@@ -69,8 +69,8 @@ def get_data_loaders(
     args:
         data (pandas dataframe): The pandas DataFrame containing the targets and features.
         split (list): list with train, val, and test ratio
-        feature_transform (callable, optional): Optional transform to be applied on a feature sample.
-        target_transform (callable, optional): Optional transform to be applied on a target sample.
+        feature_transform (callable, optional): Transform to be applied on a feature sample.
+        target_transform (callable, optional): Transform to be applied on a target sample.
     """
     # TODO: num_workers on batchloaders?
 
@@ -83,7 +83,7 @@ def get_data_loaders(
         val_data, test_data = test_data
 
     # Preprocess data
-    if preprocessor != None:
+    if preprocessor is not None:
         train_data = preprocessor.fit_transform(train_data)
         test_data = preprocessor.transform(test_data)
         if "val_data" in locals():
