@@ -1,0 +1,13 @@
+azure-storage-blob
+cloudpickle
+matplotlib
+mlflow
+numpy
+pandas
+pyarrow
+scikit-learn
+scipy
+torch
+torchaudio
+torchvision
+tqdm
