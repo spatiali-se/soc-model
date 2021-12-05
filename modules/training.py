@@ -11,7 +11,7 @@ class Trainer(torch.nn.Module):
         Args:
             model (torch.nn.Module): Neural network model.
             optimizer (torch.optim): NN optimizer, e.g. Adam.
-            loss_function (torch.nn): Loss function to be minimized, 
+            loss_function (torch.nn): Loss function to be minimized,
                                       e.g. MSELoss.
             device (string): Device to train on, e.g. CPU or cuda.
         """
