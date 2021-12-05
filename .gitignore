@@ -1,4 +1,7 @@
-# Ignore VS Code files
+# MLflow
+mlruns/
+
+# Visual Studio Code
 .vscode/
 
 # Byte-compiled / optimized / DLL files
