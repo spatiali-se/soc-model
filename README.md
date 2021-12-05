@@ -28,6 +28,7 @@ The commit contains the following structural elements, to communicate intent to 
 For more information and best practices, see [this link](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## Docker
+[//]: # (TODO: Explain that Docker needs to be installed for this to work locally)
 
 Build the docker image running the following command in your terminal from the main project directory:
 
