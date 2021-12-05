@@ -32,10 +32,10 @@ class Tester:
     def print_metrics(self):
         print(f"MSE = {self.MSE:0.3f}")
         print(f"RMSE = {self.RMSE:0.3f}")
-        print(f"Relative RMSE = {self.relative_RMSE:0.3f}")
+        print(f"Relative RMSE = {self.rRMSE:0.3f}")
         print(f"MAE = {self.MAE:0.3f}")
-        print(f"Average percentage error = {self.average_percentage_error:0.3f}")
-        print(f"Average percentage covering = {self.average_percentage_covering:0.3f}")
+        print(f"Average percentage error = {self.APE:0.3f}")
+        print(f"Average percentage covering = {self.APC:0.3f}")
 
     # TODO: return metrics
     def compute_metrics(self, model, test_loader):
@@ -44,9 +44,9 @@ class Tester:
         self.MSE = 0
         self.MAE = 0
         self.RMSE = 0
-        self.relative_RMSE = 0
-        self.average_percentage_error = 0
-        self.average_percentage_covering = 0
+        self.rRMSE = 0
+        self.APE = 0
+        self.APC = 0
         test_norm = 0
 
         with torch.no_grad():
@@ -60,24 +60,18 @@ class Tester:
 
                 self.MSE += self.MSELoss(y_test, test_y_hat).item()
                 self.MAE += self.L1Loss(y_test, test_y_hat).item()
-                self.average_percentage_error += torch.mean(
-                    torch.abs((y_test - test_y_hat) / y_test)
-                )
-                self.average_percentage_covering += torch.mean(
+                self.APE += torch.mean(torch.abs((y_test - test_y_hat) / y_test)).item()
+                self.APC += torch.mean(
                     1 - torch.abs((y_test - test_y_hat) / y_test)
-                )
+                ).item()
 
                 test_norm += torch.sum(torch.pow(y_test, 2)).item()
 
         self.MAE /= i
         self.MSE /= i
-        self.average_percentage_error *= 100 / i
-        self.average_percentage_covering *= 100 / i
+        # Average percentage error
+        self.APE *= 100 / i
+        # Average percentage covering
+        self.APC *= 100 / i
         self.RMSE = np.sqrt(self.MSE)
-        self.relative_RMSE = np.sqrt(self.RMSE / test_norm)
-        # return {
-        #     "MSE": self.MSE,
-        #     "RMSE": self.RMSE,
-        #     "rRMSE": self.relative_RMSE,
-        #     "MAE": self.MAE,
-        # }
+        self.rRMSE = np.sqrt(self.RMSE / test_norm)
