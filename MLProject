@@ -1,11 +1,15 @@
-name: mlflow-docker-test
+name: soc-model
 
 docker_env:
-  image: ml-docker
+  image: mlflow-docker
 
 entry_points:
   main:
     parameters:
-      param1: int
-      param2: { type: str, default: rofl }
-    command: "python train.py --param1 {param1} --param2 {param2}"
+      train_ratio: { type: float, default: 0.7 }
+      test_ratio: { type: float, default: 0.15 }
+      data: { type: string, default: "lucas_2015.parquet" }
+      preprocess: { type: bool, default: true }
+      plot: { type: bool, default: false }
+      print_metrics: { type: bool, default: false }
+    command: "python main.py --train_ratio {train_ratio} --test_ratio {test_ratio} --data {data} --preprocess {preprocess} --plot {plot} --print_metrics {print_metrics}"
