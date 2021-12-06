@@ -1,3 +1,5 @@
+import pdb
+
 import torch
 from tqdm import tqdm
 import copy
@@ -92,7 +94,7 @@ class Trainer(torch.nn.Module):
 
         self.optimizer.zero_grad()
         train_y_pred = self.model(train_x)
-        train_loss = self.loss_function(train_y, train_y_pred)
+        train_loss = self.loss_function(train_y_pred, train_y)
         train_loss.backward()
         self.optimizer.step()
 
