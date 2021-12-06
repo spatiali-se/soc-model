@@ -78,7 +78,6 @@ class Trainer(torch.nn.Module):
             )
 
             train_loss.append(train_epoch_loss)
-
             early_stop = self.early_stopping(val_epoch_metrics[0])
 
             if early_stop:

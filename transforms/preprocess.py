@@ -26,19 +26,12 @@ def preprocessor(data):
     aspect_col = [cols[15]]
     categorical_col = cols[23:25]
 
-    '''
-    target_transformer = Pipeline(
-        steps=[  # ("reshape", FunctionTransformer(func=np.reshape, kw_args={"newshape": (-1, 1)})),
-            ("minmax_scaler", MinMaxScaler())
-        ]
-    )
-    '''
     target_transformer = Pipeline(
             steps=[
                 # ("reshape", FunctionTransformer(func=np.reshape, kw_args={
                 # "newshape": (-1, 1)})),
-                ("sqrt_scaler", FunctionTransformer(np.sqrt)),
-                ("minmax_scaler", MinMaxScaler()),
+                ("sqrt_scaler", FunctionTransformer(func=np.sqrt)),
+                #("minmax_scaler", MinMaxScaler()),
             ]
     )
 
