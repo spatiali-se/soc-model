@@ -30,8 +30,9 @@ def preprocessor(data):
             steps=[
                 # ("reshape", FunctionTransformer(func=np.reshape, kw_args={
                 # "newshape": (-1, 1)})),
-                ("sqrt_scaler", FunctionTransformer(func=np.sqrt)),
+                #("sqrt_scaler", FunctionTransformer(func=np.sqrt)),
                 #("minmax_scaler", MinMaxScaler()),
+                ("log_scaler", FunctionTransformer(func= lambda x: np.log(x+1)))
             ]
     )
 

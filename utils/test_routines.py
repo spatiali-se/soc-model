@@ -65,7 +65,8 @@ class Tester:
                     1 - torch.abs((y_test - test_y_hat) / y_test)
                 ).item()
 
-                test_norm += torch.sum(torch.pow(y_test, 2)).item()
+                test_norm += torch.sum(torch.pow(y_test, 2)).item() \
+                             / y_test.shape[0]
 
         self.MAE /= i
         self.MSE /= i

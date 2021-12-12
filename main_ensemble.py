@@ -100,8 +100,8 @@ if __name__ == "__main__":
         "activation": nn.LeakyReLU(),
         "dropout_rate": 0.20,
     }
-    train_params = {"num_epochs": 3, "patience": 100, "early_stopping": True}
-    optim_params = {"lr": 1e-2, "weight_decay": 1e-10}
+    train_params = {"num_epochs": 500, "patience": 30, "early_stopping": True}
+    optim_params = {"lr": 1e-4, "weight_decay": 1e-7}
 
     with mlflow.start_run():
         # Create NN
