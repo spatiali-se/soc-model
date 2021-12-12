@@ -34,27 +34,40 @@ class EnsembleNN(torch.nn.Module):
                                        for i in range(self.num_models)])
 
     def forward(self, x):
+        """Forward propagation"""
+
+        # Preallocate prediction tensor
         pred = torch.zeros([x.shape[0], self.output_dim, self.num_models])
 
+        # Compute prediction mean and variance for each model
         for i, model in enumerate(self.ensemble):
             pred[:, :, i] = model(x)
 
+        # Compute prediction mean
         pred_mean = pred[:,0].mean(dim=1)
+        # Compute prediction variance according to https://arxiv.org/pdf/1612.01474.pdf
         pred_var = torch.mean(pred[:,1] + torch.pow(pred[:,0], 2), dim=1)\
                    - torch.pow(pred_mean, 2)
 
         pred_mean = torch.unsqueeze(pred_mean, dim=1)
         pred_var = torch.unsqueeze(pred_var, dim=1)
 
-        pred = torch.cat([pred_mean, pred_var], dim=1)
-        return pred
+        return torch.cat([pred_mean, pred_var], dim=1)
 
-    def compile(self, optimizers, loss_function, device):
-        """"""
+    def compile(self, optimizers, loss_function, metrics, device):
+        """Compile models and set up trainers
+
+        args:
+            optimizers (list of optimizers): List of optimizers. Optimizer i is
+                                             used to train model i.
+            loss_function (callable): Loss function used to train the models
+            device (string): Device to train on, e.g. CPU or cuda.
+        """
 
         self.device = device
         self.optimizers = optimizers
         self.loss_function = loss_function
+        self.metrics = metrics
 
         for model in self.ensemble:
             model = model.to(self.device)
@@ -67,8 +80,18 @@ class EnsembleNN(torch.nn.Module):
 
 
 
-    def fit(self, train_loader, val_loader, val_metrics,
-            num_epochs, patience, early_stopping):
+    def fit(self, train_loader, val_loader,
+            num_epochs=100, patience=20, early_stopping=True):
+        """Fit ensemble model to training data.
+
+        args:
+            train_loader (torch.utils.data.dataloader): Training data loader.
+            val_loader (torch.utils.data.dataloader): Validation data loader.
+            num_epochs (int): Number of epochs to train.
+            early_stopping (bool): Determines if early stopping is utilized.
+            patience (int): Number of accepted non improvements before early
+                            stopping
+        """
 
         train_loss_list = []
         val_metric_list = []
@@ -76,13 +99,14 @@ class EnsembleNN(torch.nn.Module):
             train_loss, val_metric = trainer.fit(
                     train_loader=train_loader,
                     val_loader=val_loader,
-                    val_metrics=val_metrics,
+                    val_metrics=self.metrics,
                     num_epochs=num_epochs,
                     patience=patience,
                     early_stopping=early_stopping,
             )
             train_loss_list.append(train_loss)
             val_metric_list.append(val_metric)
+
         return train_loss_list, val_metric_list
 
 

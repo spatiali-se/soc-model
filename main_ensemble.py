@@ -13,10 +13,11 @@ import pdb
 
 from modules.datasets import get_data_loaders
 from modules.training import Trainer
-import models.dense_neural_net as models
+import models.ensemble_model_with_uncertainty as models
 from transforms.preprocess import preprocessor
 import utils.test_routines as test_routines
 from utils.seed_everything import seed_everything
+from utils.loss_functions import negative_log_likelighood
 
 
 if __name__ == "__main__":
@@ -92,42 +93,47 @@ if __name__ == "__main__":
         **dataloader_params
     )
     nn_params = {
+        "num_models": 5,
         "input_dim": train_dataloader.dataset[0]["features"].shape[0],
-        "output_dim": 1,
+        "output_dim": 2,
         "hidden_dims": [8, 8],
         "activation": nn.LeakyReLU(),
         "dropout_rate": 0.20,
     }
-    train_params = {"num_epochs": 1000, "patience": 100, "early_stopping": True}
+    train_params = {"num_epochs": 3, "patience": 100, "early_stopping": True}
     optim_params = {"lr": 1e-2, "weight_decay": 1e-10}
 
     with mlflow.start_run():
         # Create NN
-        model = models.DenseNN(**nn_params)
+        model = models.EnsembleNN(**nn_params)
         # Set up optimizer
-        optimizer = optim.Adam(params=model.parameters(), **optim_params)
+        optimizer = [optim.Adam(params=model_i.parameters(), **optim_params)
+                     for model_i in model.ensemble]
         # Set up loss function
-        loss_function = nn.MSELoss()
+        loss_function = negative_log_likelighood
         # Set up val metrics
-        val_metrics = [nn.MSELoss(), nn.L1Loss()]
+        val_metrics = [negative_log_likelighood, nn.MSELoss()]
+        # Compile ensemble model
+        model.compile(optimizers=optimizer,
+                      loss_function=loss_function,
+                      metrics=val_metrics,
+                      device=device)
 
-        # Set up NN trainer
-        trainer = Trainer(
-            model=model, optimizer=optimizer, loss_function=loss_function, device=device
-        )
-        train_loss, val_metrics = trainer.fit(
-            train_loader=train_dataloader,
-            val_loader=val_dataloader,  # Currently
-            val_metrics=val_metrics,
-            **train_params,
-        )
+        # Train ensemble models
+        train_loss_list, val_metric_list = model.fit(train_loader=train_dataloader,
+                                                     val_loader=val_dataloader,
+                                                     **train_params)
 
         # Plot training metrics
         if plot_metrics:
             plt.figure()
-            plt.semilogy(train_loss, linewidth=2.0, label="Train MSE loss")
-            plt.semilogy(val_metrics[:, 0], linewidth=2.0, label="Val MSE loss")
-            plt.semilogy(val_metrics[:, 1], linewidth=2.0, label="Val L1 loss")
+            for i in range(nn_params["num_models"]):
+                plt.semilogy(train_loss_list[i], linewidth=1.5,
+                             label="Train MSE loss", color="tab:blue")
+                plt.semilogy(val_metric_list[i][:, 0], linewidth=1.5,
+                             label="Val MSE loss", color="tab:orange")
+                plt.semilogy(val_metric_list[i][:, 1], linewidth=1.5,
+                             label="Val L1 loss", color="tab:green")
             plt.grid()
             plt.legend()
             plt.show()
