@@ -9,7 +9,6 @@ import torch.nn as nn
 import torch.optim as optim
 import torch
 import mlflow
-import pdb
 
 from modules.datasets import get_data_loaders
 from modules.training import Trainer
@@ -109,33 +108,49 @@ if __name__ == "__main__":
         # Create NN
         model = models.EnsembleNN(**nn_params)
         # Set up optimizer
-        optimizer = [optim.Adam(params=model_i.parameters(), **optim_params)
-                     for model_i in model.ensemble]
+        optimizer = [
+            optim.Adam(params=model_i.parameters(), **optim_params)
+            for model_i in model.ensemble
+        ]
         # Set up loss function
         loss_function = negative_log_likelighood
         # Set up val metrics
         val_metrics = [loss_function, nn.MSELoss()]
         # Compile ensemble model
-        model.compile(optimizers=optimizer,
-                      loss_function=loss_function,
-                      metrics=val_metrics,
-                      device=device)
+        model.compile(
+            optimizers=optimizer,
+            loss_function=loss_function,
+            metrics=val_metrics,
+            device=device,
+        )
 
         # Train ensemble models
-        train_loss_list, val_metric_list = model.fit(train_loader=train_dataloader,
-                                                     val_loader=val_dataloader,
-                                                     **train_params)
+        train_loss_list, val_metric_list = model.fit(
+            train_loader=train_dataloader, val_loader=val_dataloader, **train_params
+        )
 
         # Plot training metrics
         if plot_metrics:
             plt.figure()
             for i in range(nn_params["num_models"]):
-                plt.semilogy(train_loss_list[i], linewidth=1.5,
-                             label="Train MSE loss", color="tab:blue")
-                plt.semilogy(val_metric_list[i][:, 0], linewidth=1.5,
-                             label="Val MSE loss", color="tab:orange")
-                plt.semilogy(val_metric_list[i][:, 1], linewidth=1.5,
-                             label="Val L1 loss", color="tab:green")
+                plt.semilogy(
+                    train_loss_list[i],
+                    linewidth=1.5,
+                    label="Train MSE loss",
+                    color="tab:blue",
+                )
+                plt.semilogy(
+                    val_metric_list[i][:, 0],
+                    linewidth=1.5,
+                    label="Val MSE loss",
+                    color="tab:orange",
+                )
+                plt.semilogy(
+                    val_metric_list[i][:, 1],
+                    linewidth=1.5,
+                    label="Val L1 loss",
+                    color="tab:green",
+                )
             plt.grid()
             plt.legend()
             plt.show()
