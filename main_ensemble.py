@@ -39,10 +39,10 @@ if __name__ == "__main__":
     )
     parser.add_argument("--preprocess", type=bool, default=True, help="preprocess data")
     parser.add_argument(
-        "--plot", type=bool, default=False, help="plot training metrics"
+        "--plot", type=bool, default=True, help="plot training metrics"
     )
     parser.add_argument(
-        "--print_metrics", type=bool, default=False, help="print metrics"
+        "--print_metrics", type=bool, default=True, help="print metrics"
     )
     args = parser.parse_args()
 
@@ -74,6 +74,8 @@ if __name__ == "__main__":
     else:
         raise ValueError("data file must be .parquet, .csv or .np")
 
+    #data = data[data['OC'] <= 100]
+
     if preprocess:
         preproc = preprocessor(data)
     else:
@@ -83,7 +85,7 @@ if __name__ == "__main__":
     # TODO: Incoroporate variable hparams into cli args parsing
     dataloader_params = {
         "data": data,
-        "batch_size": 64,
+        "batch_size": 256,
         "train_ratio": 0.7,
         "test_ratio": 0.15,
         "preprocessor": preproc,
@@ -96,12 +98,12 @@ if __name__ == "__main__":
         "num_models": 5,
         "input_dim": train_dataloader.dataset[0]["features"].shape[0],
         "output_dim": 2,
-        "hidden_dims": [8, 8],
+        "hidden_dims": [16, 8],
         "activation": nn.LeakyReLU(),
-        "dropout_rate": 0.20,
+        "dropout_rate": 0.2,
     }
-    train_params = {"num_epochs": 500, "patience": 30, "early_stopping": True}
-    optim_params = {"lr": 1e-4, "weight_decay": 1e-7}
+    train_params = {"num_epochs": 4000, "patience": 600, "early_stopping": True}
+    optim_params = {"lr": 1e-3, "weight_decay": 1e-10}
 
     with mlflow.start_run():
         # Create NN
@@ -112,7 +114,7 @@ if __name__ == "__main__":
         # Set up loss function
         loss_function = negative_log_likelighood
         # Set up val metrics
-        val_metrics = [negative_log_likelighood, nn.MSELoss()]
+        val_metrics = [loss_function, nn.MSELoss()]
         # Compile ensemble model
         model.compile(optimizers=optimizer,
                       loss_function=loss_function,
@@ -138,20 +140,30 @@ if __name__ == "__main__":
             plt.legend()
             plt.show()
 
+
+        inverse_transform = lambda x: torch.exp(x)-1
         # Run test routine
-        test_model = test_routines.Tester(model, test_dataloader)
+        test_model = test_routines.Tester(model, test_dataloader, 
+            inverse_transform_target=preproc.transformers[0][1].inverse_transform)
+
+        # Print prediction and compare with true values
+        test_model.plot_predictions()
 
         # TODO: Fix why it's printing metrics when args is set to False
         # Print test metrics
         if print_metrics:
             test_model.print_metrics()
 
+        
         mlflow.log_param("dropout_rate", nn_params["dropout_rate"])
-        mlflow.log_metric("MAE", test_model.MAE)
-        mlflow.log_metric("MSE", test_model.MSE)
-        mlflow.log_metric("APE", test_model.APE)
-        mlflow.log_metric("APC", test_model.APC)
+        #mlflow.log_metric("MAE", test_model.MAE)
+        #mlflow.log_metric("MSE", test_model.MSE)
+        #mlflow.log_metric("APE", test_model.APE)
+        #mlflow.log_metric("APC", test_model.APC)
+        #mlflow.log_metric("RMSE", test_model.RMSE)
+        #mlflow.log_metric("rRMSE", test_model.rRMSE)
+        mlflow.log_metric("MAPE", test_model.MAPE)
         mlflow.log_metric("RMSE", test_model.RMSE)
-        mlflow.log_metric("rRMSE", test_model.rRMSE)
+        mlflow.log_metric("reliability", test_model.reliability)
 
-        mlflow.pytorch.log_model(model, "model")
+        #mlflow.pytorch.log_model(model, "model")

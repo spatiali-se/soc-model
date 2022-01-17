@@ -17,6 +17,8 @@ import models.dense_neural_net as models
 from transforms.preprocess import preprocessor
 import utils.test_routines as test_routines
 from utils.seed_everything import seed_everything
+from utils.loss_functions import negative_log_likelighood
+from sklearn.preprocessing import MinMaxScaler
 
 
 if __name__ == "__main__":
@@ -41,7 +43,7 @@ if __name__ == "__main__":
         "--plot", type=bool, default=False, help="plot training metrics"
     )
     parser.add_argument(
-        "--print_metrics", type=bool, default=False, help="print metrics"
+        "--print_metrics", type=bool, default=True, help="print metrics"
     )
     args = parser.parse_args()
 
@@ -73,11 +75,14 @@ if __name__ == "__main__":
     else:
         raise ValueError("data file must be .parquet, .csv or .np")
 
+    #pdb.set_trace()
+    #data = data[data['OC'] < 15]
+
     if preprocess:
         preproc = preprocessor(data)
     else:
         preproc = None
-
+        
     # Hyperparameters
     # TODO: Incoroporate variable hparams into cli args parsing
     dataloader_params = {
@@ -94,12 +99,13 @@ if __name__ == "__main__":
     nn_params = {
         "input_dim": train_dataloader.dataset[0]["features"].shape[0],
         "output_dim": 1,
-        "hidden_dims": [8, 8],
+        "hidden_dims": [4, 4, 4, 4],
         "activation": nn.LeakyReLU(),
         "dropout_rate": 0.20,
     }
-    train_params = {"num_epochs": 1000, "patience": 100, "early_stopping": True}
-    optim_params = {"lr": 1e-2, "weight_decay": 1e-10}
+    train_params = {"num_epochs": 1000, "patience": 500, "early_stopping": True}
+    optim_params = {"lr": 1e-3, "weight_decay": 1e-2}
+
 
     with mlflow.start_run():
         # Create NN
@@ -107,7 +113,7 @@ if __name__ == "__main__":
         # Set up optimizer
         optimizer = optim.Adam(params=model.parameters(), **optim_params)
         # Set up loss function
-        loss_function = nn.MSELoss()
+        loss_function = nn.MSELoss()#negative_log_likelighood
         # Set up val metrics
         val_metrics = [nn.MSELoss(), nn.L1Loss()]
 
@@ -133,19 +139,27 @@ if __name__ == "__main__":
             plt.show()
 
         # Run test routine
-        test_model = test_routines.Tester(model, test_dataloader)
+        test_model = test_routines.Tester(model, test_dataloader, 
+            inverse_transform_target=preproc.transformers[0][1].inverse_transform)
+
+        # Print prediction and compare with true values
+        test_model.plot_predictions()
 
         # TODO: Fix why it's printing metrics when args is set to False
         # Print test metrics
         if print_metrics:
             test_model.print_metrics()
 
+        
         mlflow.log_param("dropout_rate", nn_params["dropout_rate"])
-        mlflow.log_metric("MAE", test_model.MAE)
-        mlflow.log_metric("MSE", test_model.MSE)
-        mlflow.log_metric("APE", test_model.APE)
-        mlflow.log_metric("APC", test_model.APC)
+        #mlflow.log_metric("MAE", test_model.MAE)
+        #mlflow.log_metric("MSE", test_model.MSE)
+        #mlflow.log_metric("APE", test_model.APE)
+        #mlflow.log_metric("APC", test_model.APC)
+        #mlflow.log_metric("RMSE", test_model.RMSE)
+        #mlflow.log_metric("rRMSE", test_model.rRMSE)
+        mlflow.log_metric("MAPE", test_model.MAPE)
         mlflow.log_metric("RMSE", test_model.RMSE)
-        mlflow.log_metric("rRMSE", test_model.rRMSE)
-
-        mlflow.pytorch.log_model(model, "model")
+        mlflow.log_metric("reliability", test_model.reliability)
+        
+        #mlflow.pytorch.log_model(model, "model")

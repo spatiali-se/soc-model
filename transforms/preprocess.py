@@ -32,7 +32,10 @@ def preprocessor(data):
                 # "newshape": (-1, 1)})),
                 #("sqrt_scaler", FunctionTransformer(func=np.sqrt)),
                 #("minmax_scaler", MinMaxScaler()),
-                ("log_scaler", FunctionTransformer(func= lambda x: np.log(x+1)))
+                ("log_scaler", FunctionTransformer(func=lambda x: np.log(x+1),
+                                        inverse_func=lambda x: np.exp(x)-1)),
+                #("minmax_scaler", MinMaxScaler()),
+                #("identity", FunctionTransformer(func=lambda x: x)),
             ]
     )
 

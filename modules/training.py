@@ -62,7 +62,7 @@ class Trainer(torch.nn.Module):
 
         train_loss = []
         val_metrics = []
-        progress_bar = tqdm(range(num_epochs))
+        progress_bar = tqdm(range(num_epochs), bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}')
         for epoch in progress_bar:
             for _, train_data in enumerate(train_loader):
                 x_train = train_data["features"].to(self.device)
@@ -73,9 +73,10 @@ class Trainer(torch.nn.Module):
             val_epoch_metrics = self.validation_loss(val_loader)
             val_metrics.append(val_epoch_metrics)
 
-            progress_bar.set_postfix(
-                {"Train loss": train_epoch_loss, "Val metrics": val_epoch_metrics}
-            )
+            if epoch % 10 == 0:
+                progress_bar.set_postfix(
+                    {"Train loss": train_epoch_loss, "Val metrics": val_epoch_metrics}
+                )
 
             train_loss.append(train_epoch_loss)
             early_stop = self.early_stopping(val_epoch_metrics[0])
