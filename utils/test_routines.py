@@ -81,7 +81,7 @@ class Tester:
         self.MSE = torch.mean(self.SE)
         self.SrE = torch.divide(self.SE,torch.pow(self.true_values,2))
         self.RMSE = torch.sqrt(self.MSE)
-        self.rRMSE = self.MSE/self.true_L2_norm
+        self.rRMSE = (self.MSE/self.true_L2_norm)
         self.MSrE = torch.mean(self.SrE)
         self.RMSrE = torch.sqrt(self.MSrE)
         self.AE = torch.abs(self.preds-self.true_values)
@@ -97,4 +97,4 @@ class Tester:
         
         self.reliability = self.APE<20.
         self.reliability = torch.sum(self.reliability)/len(self.reliability) * 100
-        self.reliability = self.reliability.item()
+        self.reliability = self.reliability

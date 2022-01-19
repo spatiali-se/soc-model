@@ -75,8 +75,8 @@ class EnsembleNN(torch.nn.Module):
         self.trainers = [Trainer(model=model,
                                   optimizer=optimizer,
                                   loss_function=loss_function,
-                                  device=device) for _, (model, optimizer) in
-                          enumerate(zip(self.ensemble, self.optimizers))]
+                                  device=device) for (model, optimizer) in
+                          zip(self.ensemble, self.optimizers)]
 
 
 

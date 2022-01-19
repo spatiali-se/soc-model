@@ -4,6 +4,7 @@ import torch
 from tqdm import tqdm
 import copy
 import numpy as np
+from ray import tune
 
 
 class Trainer(torch.nn.Module):
@@ -33,6 +34,8 @@ class Trainer(torch.nn.Module):
         val_metrics=None,
         early_stopping=True,
         patience=10,
+        with_tune=False,
+        print_progress=True
     ):
         """Fit model to training data
 
@@ -62,7 +65,11 @@ class Trainer(torch.nn.Module):
 
         train_loss = []
         val_metrics = []
-        progress_bar = tqdm(range(num_epochs), bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}')
+
+        if print_progress:
+            progress_bar = tqdm(range(num_epochs), bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}')
+        else:
+            progress_bar = range(num_epochs)
         for epoch in progress_bar:
             for _, train_data in enumerate(train_loader):
                 x_train = train_data["features"].to(self.device)
@@ -73,18 +80,24 @@ class Trainer(torch.nn.Module):
             val_epoch_metrics = self.validation_loss(val_loader)
             val_metrics.append(val_epoch_metrics)
 
-            if epoch % 10 == 0:
+            if print_progress and epoch % 10 == 0:
                 progress_bar.set_postfix(
                     {"Train loss": train_epoch_loss, "Val metrics": val_epoch_metrics}
                 )
 
             train_loss.append(train_epoch_loss)
-            early_stop = self.early_stopping(val_epoch_metrics[0])
 
-            if early_stop:
-                self.model.load_state_dict(self.best_model)
-                print("Early Stopping!")
-                break
+            if with_tune:
+                tune.report(loss=val_epoch_metrics[0])
+
+            if early_stopping:
+                early_stop = self.early_stopping(val_epoch_metrics[0])
+
+                if early_stop:
+                    self.model.load_state_dict(self.best_model)
+                    print("Early Stopping!")
+                    self.model.eval()  # Model in eval mode
+                    break
 
         self.model.eval()  # Model in eval mode
         return np.asarray(train_loss), np.asarray(val_metrics)

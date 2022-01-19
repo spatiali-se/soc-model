@@ -1,6 +1,8 @@
 import torch.nn as nn
 import torch
+import pdb
 
+from modules.training import Trainer
 
 class DenseNN(torch.nn.Module):
     """Dense Neural Network"""
@@ -41,7 +43,7 @@ class DenseNN(torch.nn.Module):
 
     def forward(self, x):
         """Forward propagation"""
-
+        
         x = self.linear_input(x)
         x = self.dropout(x)
         x = self.activation(x)

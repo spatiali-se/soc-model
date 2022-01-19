@@ -10,6 +10,7 @@ import torch.optim as optim
 import torch
 import mlflow
 import pdb
+import seaborn as sns
 
 from modules.datasets import get_data_loaders
 from modules.training import Trainer
@@ -24,7 +25,7 @@ from sklearn.preprocessing import MinMaxScaler
 if __name__ == "__main__":
     warnings.filterwarnings("ignore")
     seed_everything()
-    torch.set_default_dtype(torch.double)
+    torch.set_default_dtype(torch.float32)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {str(device).upper()} as ´device´")
 
@@ -75,13 +76,21 @@ if __name__ == "__main__":
     else:
         raise ValueError("data file must be .parquet, .csv or .np")
 
-    #pdb.set_trace()
     #data = data[data['OC'] < 15]
 
+    '''
+    cols = data.columns
+    for col_name in cols[0:13]:
+        plt.figure()
+        plt.hist(data[col_name], bins=50)
+        plt.title(col_name)
+        plt.show()
+    '''
     if preprocess:
         preproc = preprocessor(data)
     else:
         preproc = None
+    
         
     # Hyperparameters
     # TODO: Incoroporate variable hparams into cli args parsing
@@ -96,15 +105,37 @@ if __name__ == "__main__":
     train_dataloader, val_dataloader, test_dataloader = get_data_loaders(
         **dataloader_params
     )
+
+    #sns.pairplot(data)
+    #plt.show()
+    #pdb.set_trace()
+
+    '''
+    f, ax = plt.subplots(figsize=(10, 8))
+    corr = data.corr()
+    sns.heatmap(corr, mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10, as_cmap=True),
+            square=True, ax=ax)
+    plt.show()    
+
+    cols = data.columns
+
+    plt.figure()
+    for i in range(0,21):
+        plt.subplot(5,5,i+1)
+        plt.hist(train_dataloader.dataset[:]['features'][:,i], bins=50)
+        plt.title(cols[i+1])
+    plt.show()89*
+    '''
+
     nn_params = {
         "input_dim": train_dataloader.dataset[0]["features"].shape[0],
         "output_dim": 1,
-        "hidden_dims": [4, 4, 4, 4],
+        "hidden_dims": [16, 16, 16],
         "activation": nn.LeakyReLU(),
         "dropout_rate": 0.20,
     }
-    train_params = {"num_epochs": 1000, "patience": 500, "early_stopping": True}
-    optim_params = {"lr": 1e-3, "weight_decay": 1e-2}
+    train_params = {"num_epochs": 1000, "patience": 500, "early_stopping": False}
+    optim_params = {"lr": 1e-3, "weight_decay": 1e-5}
 
 
     with mlflow.start_run():
@@ -158,8 +189,8 @@ if __name__ == "__main__":
         #mlflow.log_metric("APC", test_model.APC)
         #mlflow.log_metric("RMSE", test_model.RMSE)
         #mlflow.log_metric("rRMSE", test_model.rRMSE)
-        mlflow.log_metric("MAPE", test_model.MAPE)
-        mlflow.log_metric("RMSE", test_model.RMSE)
-        mlflow.log_metric("reliability", test_model.reliability)
+        mlflow.log_metric("MAPE", test_model.MAPE.item())
+        mlflow.log_metric("RMSE", test_model.RMSE.item())
+        mlflow.log_metric("reliability", test_model.reliability.item())
         
         #mlflow.pytorch.log_model(model, "model")

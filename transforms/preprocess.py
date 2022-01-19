@@ -7,6 +7,7 @@ from sklearn.preprocessing import (
     RobustScaler,
     FunctionTransformer,
     OneHotEncoder,
+    StandardScaler
 )
 from sklearn.impute import SimpleImputer
 import pyarrow.parquet as pq
@@ -51,7 +52,7 @@ def preprocessor(data):
         steps=[
             ("imputer", SimpleImputer(strategy="median")),
             ("robust_scaler", RobustScaler()),
-            ("minmax_scaler", MinMaxScaler()),
+            ("minmax_scaler", MinMaxScaler())
         ]
     )
 
@@ -60,7 +61,7 @@ def preprocessor(data):
             ("imputer", SimpleImputer(strategy="median")),
             ("absorbance", FunctionTransformer(func=absorbance)),
             ("robust_scaler", RobustScaler()),
-            ("minmax_scaler", MinMaxScaler()),
+            ("minmax_scaler", MinMaxScaler())
         ]
     )
 
@@ -70,6 +71,7 @@ def preprocessor(data):
         transformers=[
             ("targets", target_transformer, target_col),
             ("spectral", spectral_transformer, spectral_col),
+            ("aspect", aspect_transformer, aspect_col),
             ("quantitative", quantitative_transformer, quantitative_col),
             ("categorical", categorical_transformer, categorical_col),
         ],

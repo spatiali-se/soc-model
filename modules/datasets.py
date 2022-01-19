@@ -1,6 +1,8 @@
 import torch
 from sklearn.model_selection import train_test_split
 from torch.utils.data.dataloader import DataLoader
+import pdb
+import numpy as np
 
 
 class SoilDataset(torch.utils.data.TensorDataset):
@@ -14,8 +16,8 @@ class SoilDataset(torch.utils.data.TensorDataset):
             feature_transform (callable, optional): Transform to be applied on a feature sample.
             target_transform (callable, optional): Transform to be applied on a target sample.
         """
-        self.targets = data[:, 0:1]
-        self.features = data[:, 1:]
+        self.targets = data[:, 0:1].astype(np.float32)
+        self.features = data[:, 1:].astype(np.float32)
 
         self.features_transform = features_transform
         self.target_transform = target_transform
@@ -26,8 +28,8 @@ class SoilDataset(torch.utils.data.TensorDataset):
 
     def __getitem__(self, idx):
         "Get one sample."
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
+        #if torch.is_tensor(idx):
+        #    idx = idx.tolist()
         targ = self.targets[idx]
         feat = self.features[idx]
 
@@ -41,6 +43,7 @@ class SoilDataset(torch.utils.data.TensorDataset):
 
 def split_data(data, train_ratio, test_ratio):
     """Splits dataset into train, val, and test data"""
+
 
     # Split into train(-val) and test
     train_split, test_split = train_test_split(data, test_size=test_ratio)
